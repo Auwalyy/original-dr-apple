@@ -11,12 +11,14 @@ module.exports = {
         serif: platformSelect({
           ios: 'Georgia',
           android: 'serif',
-          default: "'Playfair Display', Georgia, Cambria, 'Times New Roman', serif",
+          web: "Georgia, Cambria, 'Times New Roman', Times, serif",
+          default: 'serif',
         }),
         mono: platformSelect({
           ios: 'Menlo',
           android: 'monospace',
-          default: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          web: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+          default: 'monospace',
         }),
       },
     },
