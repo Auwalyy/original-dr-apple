@@ -1,10 +1,11 @@
-import { RefreshCw } from 'lucide-react-native';
+import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
 
-import { AdminShell, Panel, PublishButton, SavedBanner } from '@/components/admin/AdminShell';
+import { AdminScreen } from '@/components/admin/AdminScreen';
+import { FormSection } from '@/components/admin/FormSection';
 import { ImageUploader } from '@/components/admin/ImageUploader';
-import { Input, Label } from '@/components/ui/primitives';
+import { useFeedback } from '@/components/ui/Feedback';
+import { HeaderButton, TextField } from '@/components/ui/primitives';
 import { useCMS } from '@/lib/store';
 import { SwapProgramContent } from '@/lib/types';
 
@@ -16,85 +17,58 @@ const STEPS = [
 
 export default function AdminSwapProgramScreen() {
   const { swapProgram, saveSwapProgram } = useCMS();
+  const { toast } = useFeedback();
   const [content, setContent] = useState<SwapProgramContent>(swapProgram);
-  const [savedMessage, setSavedMessage] = useState('');
 
+  const dirty = JSON.stringify(content) !== JSON.stringify(swapProgram);
   const set = (key: keyof SwapProgramContent, value: string) => setContent((c) => ({ ...c, [key]: value }));
 
-  const handleSave = () => {
-    if (!content.title.trim()) return;
+  const save = () => {
     saveSwapProgram(content);
-    setSavedMessage('Discovery Split-Screen Swap Program copy published to storefront!');
-    setTimeout(() => setSavedMessage(''), 3000);
+    toast('Swap content updated');
   };
 
   return (
-    <AdminShell title="Discovery Split-Screen Swap Copy">
-      <SavedBanner message={savedMessage} />
-
-      <Panel>
-        <View className="gap-3 border-b border-neutral-200 pb-4">
-          <View className="flex-row items-center gap-3">
-            <RefreshCw size={20} color="#000" />
-            <Text className="flex-1 font-serif text-lg font-bold text-black">Discovery Split-Screen Section Copy</Text>
-          </View>
-          <PublishButton label="Publish Swap Copy" onPress={handleSave} />
-        </View>
-
-        <View>
-          <Label>Section Title</Label>
-          <Input value={content.title} onChangeText={(t) => set('title', t)} className="font-serif text-base" />
-        </View>
-        <View>
-          <Label>Section Narrative Subtitle</Label>
-          <Input
-            multiline
-            textAlignVertical="top"
-            value={content.subtitle}
-            onChangeText={(t) => set('subtitle', t)}
-            className="min-h-[64px]"
+    <>
+      <Stack.Screen
+        options={{
+          headerRight: () => <HeaderButton title="Save" onPress={save} disabled={!dirty || !content.title.trim()} />,
+        }}
+      />
+      <AdminScreen>
+        <FormSection title="Store photo" footer="Shown on the Store tab.">
+          <ImageUploader
+            value={content.pinned_image_url}
+            onChange={(url) => set('pinned_image_url', url)}
+            aspect={16 / 9}
           />
-        </View>
+        </FormSection>
 
-        <ImageUploader
-          value={content.pinned_image_url}
-          onChange={(url) => set('pinned_image_url', url)}
-          label="Pinned Side Image Asset (Supabase Storage)"
-        />
+        <FormSection title="Introduction">
+          <TextField label="Title" value={content.title} onChangeText={(t) => set('title', t)} />
+          <TextField label="Summary" multiline value={content.subtitle} onChangeText={(t) => set('subtitle', t)} />
+        </FormSection>
 
-        <View className="gap-4 border-t border-neutral-200 pt-4">
-          <Text className="font-mono text-xs font-bold uppercase tracking-[1.2px] text-black">
-            Step-by-Step Narrative Breakdown
-          </Text>
-
-          {STEPS.map((step) => (
-            <View key={step.title} className="gap-2 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-              <Input
-                value={content[step.title]}
-                onChangeText={(t) => set(step.title, t)}
-                className="rounded-lg bg-white px-3 py-2 font-bold"
-              />
-              <Input
-                multiline
-                textAlignVertical="top"
-                value={content[step.desc]}
-                onChangeText={(t) => set(step.desc, t)}
-                className="min-h-[64px] rounded-lg bg-white p-3 text-neutral-700"
-              />
-            </View>
-          ))}
-
-          <View>
-            <Label>Kano Trade-in Guarantee Statement</Label>
-            <Input
-              value={content.valuation_guarantee_text}
-              onChangeText={(t) => set('valuation_guarantee_text', t)}
+        {STEPS.map((step, i) => (
+          <FormSection key={step.title} title={`Step ${i + 1}`}>
+            <TextField label="Title" value={content[step.title]} onChangeText={(t) => set(step.title, t)} />
+            <TextField
+              label="Description"
+              multiline
+              value={content[step.desc]}
+              onChangeText={(t) => set(step.desc, t)}
             />
-          </View>
-        </View>
+          </FormSection>
+        ))}
 
-        <PublishButton label="Publish Swap Copy" onPress={handleSave} />
-      </Panel>
-    </AdminShell>
+        <FormSection title="Guarantee" footer="Shown on Home, Swap and Store.">
+          <TextField
+            multiline
+            value={content.valuation_guarantee_text}
+            onChangeText={(t) => set('valuation_guarantee_text', t)}
+          />
+        </FormSection>
+      </AdminScreen>
+    </>
   );
 }

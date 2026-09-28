@@ -1,163 +1,115 @@
 import { router } from 'expo-router';
 import {
-  CheckCircle,
+  CheckCircle2,
   Image as ImageIcon,
+  LogOut,
   LucideIcon,
   Package,
-  Plus,
   RefreshCw,
-  Sliders,
+  SlidersHorizontal,
+  Store,
+  Users,
   Zap,
 } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { AdminShell, Panel } from '@/components/admin/AdminShell';
-import { Img } from '@/components/ui/primitives';
+import { AdminScreen } from '@/components/admin/AdminScreen';
+import { useFeedback } from '@/components/ui/Feedback';
+import { ListRow, ListSection } from '@/components/ui/primitives';
+import { colors, shadows } from '@/components/ui/theme';
 import { useCMS } from '@/lib/store';
-import { formatNaira } from '@/lib/utils';
 
 export default function AdminDashboardScreen() {
-  const { products, updateProduct } = useCMS();
+  const { products, media, users, session, logout } = useCMS();
+  const { showActions } = useFeedback();
+  const isSuper = session?.role === 'Super Admin';
 
-  const metrics: { icon: LucideIcon; tag: string; label: string; value: number }[] = [
-    { icon: Package, tag: 'Active', label: 'Total Products', value: products.length },
-    { icon: CheckCircle, tag: 'Storefront', label: 'Published Live', value: products.filter((p) => p.is_published).length },
-    { icon: RefreshCw, tag: 'Kano Trade-in', label: 'UK Used & Swaps', value: products.filter((p) => p.category === 'uk-used').length },
-    { icon: Zap, tag: 'Discounted', label: 'Defect Deals', value: products.filter((p) => p.category === 'defect-deals').length },
+  const stats: { icon: LucideIcon; label: string; value: number }[] = [
+    { icon: Package, label: 'Products', value: products.length },
+    { icon: CheckCircle2, label: 'Live in store', value: products.filter((p) => p.is_published).length },
+    { icon: RefreshCw, label: 'UK used', value: products.filter((p) => p.category === 'uk-used').length },
+    { icon: Zap, label: 'Defect deals', value: products.filter((p) => p.category === 'defect-deals').length },
   ];
 
-  const modules = [
-    { icon: Package, title: 'Products Catalogue', desc: 'Manage price, specs, stock & condition badges.', path: '/admin/products' },
-    { icon: Sliders, title: 'Dynamic Banners', desc: 'Hero title, background image & announcement text.', path: '/admin/settings' },
-    { icon: RefreshCw, title: 'Swap Program Copy', desc: 'Pinned image & step-by-step narrative copy.', path: '/admin/swap-program' },
-    { icon: ImageIcon, title: 'Supabase Cloud Storage', desc: 'Upload & manage image assets in cloud storage.', path: '/admin/media' },
-  ] as const;
+  const signOut = () =>
+    showActions({
+      title: 'Sign out of the dashboard?',
+      options: [
+        {
+          label: 'Sign out',
+          icon: LogOut,
+          destructive: true,
+          onPress: () => {
+            logout();
+            router.dismissTo('/store');
+          },
+        },
+      ],
+    });
 
   return (
-    <AdminShell title="Admin Overview & Operations">
-      {/* Key metrics */}
-      <View className="flex-row flex-wrap justify-between gap-y-4">
-        {metrics.map(({ icon: Icon, tag, label, value }) => (
-          <View key={label} className="w-[48%] gap-2 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <View className="flex-row items-center justify-between">
-              <Icon size={20} color="#000" />
-              <View className="rounded border border-neutral-300 bg-neutral-100 px-2 py-0.5">
-                <Text className="font-mono text-[10px] font-bold text-black" numberOfLines={1}>
-                  {tag}
-                </Text>
-              </View>
-            </View>
-            <Text className="text-xs font-medium text-neutral-600">{label}</Text>
-            <Text className="font-serif text-3xl font-bold text-black">{value}</Text>
+    <AdminScreen>
+      <View>
+        <Text className="text-body text-secondary">Welcome back,</Text>
+        <View className="mt-0.5 flex-row items-center gap-2">
+          <Text className="text-title font-bold text-ink">{session?.name}</Text>
+          <View className="rounded-full bg-ink px-2.5 py-1">
+            <Text className="text-caption font-semibold text-white">{session?.role}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View className="flex-row flex-wrap gap-3">
+        {stats.map(({ icon: Icon, label, value }) => (
+          <View key={label} className="rounded-2xl bg-white p-4" style={[{ width: '48.3%' }, shadows.card]}>
+            <Icon size={20} color={colors.ink} />
+            <Text className="mt-3 text-title font-bold text-ink">{value}</Text>
+            <Text className="text-subhead text-secondary">{label}</Text>
           </View>
         ))}
       </View>
 
-      {/* CMS modules */}
-      <View className="gap-4">
-        <Text className="font-serif text-lg font-bold text-black">CMS Core Modules</Text>
-        <View className="gap-4">
-          {modules.map(({ icon: Icon, title, desc, path }) => (
-            <Pressable
-              key={path}
-              onPress={() => router.push(path)}
-              className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm active:border-black"
-            >
-              <View className="mb-3">
-                <Icon size={24} color="#000" />
-              </View>
-              <Text className="text-sm font-bold text-black">{title}</Text>
-              <Text className="mt-1 text-xs text-neutral-600">{desc}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
+      <ListSection title="Manage" inset={60}>
+        <ListRow
+          icon={Package}
+          title="Products"
+          subtitle="Prices, stock, photos and visibility"
+          value={String(products.length)}
+          onPress={() => router.push('/admin/products')}
+        />
+        <ListRow
+          icon={SlidersHorizontal}
+          title="Storefront"
+          subtitle="Home banner, announcement and contact details"
+          onPress={() => router.push('/admin/settings')}
+        />
+        <ListRow
+          icon={RefreshCw}
+          title="Swap content"
+          subtitle="How-it-works steps and guarantee"
+          onPress={() => router.push('/admin/swap-program')}
+        />
+        <ListRow
+          icon={ImageIcon}
+          title="Media library"
+          value={String(media.length)}
+          onPress={() => router.push('/admin/media')}
+        />
+        {isSuper && (
+          <ListRow
+            icon={Users}
+            title="Team & roles"
+            value={String(users.length)}
+            onPress={() => router.push('/admin/users')}
+          />
+        )}
+      </ListSection>
 
-      {/* Catalogue quick control */}
-      <Panel className="shadow-md">
-        <View className="gap-3">
-          <View>
-            <Text className="font-serif text-lg font-bold text-black">Catalogue Quick Control</Text>
-            <Text className="text-xs text-neutral-600">Toggle published state or launch product editor</Text>
-          </View>
-          <Pressable
-            onPress={() => router.push('/admin/products')}
-            className="flex-row items-center gap-1.5 self-start rounded-xl bg-black px-4 py-2 shadow-sm"
-          >
-            <Plus size={16} color="#fff" />
-            <Text className="text-xs font-bold text-white">Manage Products</Text>
-          </Pressable>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View>
-            <View className="flex-row border-b border-neutral-300 bg-neutral-100">
-              {['Item', 'Category', 'Price (NGN)', 'Badge', 'Status', 'Actions'].map((h, i) => (
-                <Text key={h} className="px-4 py-3 font-mono text-[10px] uppercase text-black" style={{ width: COLS[i] }}>
-                  {h}
-                </Text>
-              ))}
-            </View>
-
-            {products.slice(0, 5).map((product) => (
-              <View key={product.id} className="flex-row items-center border-b border-neutral-200">
-                <View className="flex-row items-center gap-3 px-4 py-3" style={{ width: COLS[0] }}>
-                  <Img
-                    source={{ uri: product.image_url }}
-                    className="h-9 w-9 rounded-lg border border-neutral-300 bg-neutral-100"
-                    contentFit="cover"
-                  />
-                  <View className="flex-1">
-                    <Text className="text-xs font-semibold text-black" numberOfLines={1}>
-                      {product.name}
-                    </Text>
-                    <Text className="font-mono text-[10px] text-neutral-500" numberOfLines={1}>
-                      {product.storage} • {product.color}
-                    </Text>
-                  </View>
-                </View>
-                <View className="px-4 py-3" style={{ width: COLS[1] }}>
-                  <View className="self-start rounded border border-neutral-300 bg-neutral-100 px-2 py-1">
-                    <Text className="font-mono text-[11px] font-semibold text-black">{product.category}</Text>
-                  </View>
-                </View>
-                <Text className="px-4 py-3 font-mono text-xs font-bold text-black" style={{ width: COLS[2] }}>
-                  {formatNaira(product.price)}
-                </Text>
-                <Text className="px-4 py-3 font-mono text-[10px] text-black" style={{ width: COLS[3] }}>
-                  {product.badge_label}
-                </Text>
-                <View className="px-4 py-3" style={{ width: COLS[4] }}>
-                  <Pressable
-                    onPress={() => updateProduct(product.id, { is_published: !product.is_published })}
-                    className={`self-start rounded-full border px-3 py-1 ${
-                      product.is_published ? 'border-black bg-black' : 'border-neutral-300 bg-neutral-100'
-                    }`}
-                  >
-                    <Text
-                      className={`text-[10px] font-bold uppercase tracking-[0.5px] ${
-                        product.is_published ? 'text-white' : 'text-neutral-600'
-                      }`}
-                    >
-                      {product.is_published ? 'Live' : 'Draft'}
-                    </Text>
-                  </Pressable>
-                </View>
-                <Pressable
-                  onPress={() => router.push({ pathname: '/admin/products', params: { edit: product.id } })}
-                  className="px-4 py-3"
-                  style={{ width: COLS[5] }}
-                >
-                  <Text className="text-xs font-semibold text-black">Edit →</Text>
-                </Pressable>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      </Panel>
-    </AdminShell>
+      <ListSection inset={60}>
+        <ListRow icon={Store} title="View storefront" onPress={() => router.dismissTo('/')} />
+        <ListRow icon={LogOut} title="Sign out" destructive chevron={false} onPress={signOut} />
+      </ListSection>
+    </AdminScreen>
   );
 }
-
-const COLS = [260, 140, 130, 130, 100, 90];

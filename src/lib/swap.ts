@@ -57,7 +57,7 @@ export function buildSwapRequestText(
   customerName: string,
   tradeValue: number,
   target: Product | undefined,
-  topUp: number
+  topUp: number,
 ): string {
   return (
     `*DR APPLE KANO - SWAP & UPGRADE REQUEST* \n\n` +

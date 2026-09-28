@@ -1,188 +1,103 @@
-import { useLocalSearchParams } from 'expo-router';
-import { Edit2, Eye, EyeOff, Plus, Search, Trash2 } from 'lucide-react-native';
+import { router, Stack } from 'expo-router';
+import { PackageSearch, Plus } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
-import { AdminShell } from '@/components/admin/AdminShell';
-import { ProductForm } from '@/components/admin/ProductForm';
-import { Select } from '@/components/ui/Select';
-import { Img } from '@/components/ui/primitives';
+import { AdminScreen } from '@/components/admin/AdminScreen';
+import { useFeedback } from '@/components/ui/Feedback';
+import { Chip, EmptyState, IconButton, Img, SearchBar } from '@/components/ui/primitives';
+import { colors, shadows } from '@/components/ui/theme';
+import { CATEGORY_FILTERS, categoryLabel } from '@/lib/catalog';
+import { haptics } from '@/lib/haptics';
 import { useCMS } from '@/lib/store';
 import { CategoryFilter } from '@/lib/types';
 import { formatNaira } from '@/lib/utils';
 
 export default function AdminProductsScreen() {
-  const { products, addProduct, updateProduct, deleteProduct } = useCMS();
-  const { edit } = useLocalSearchParams<{ edit?: string }>();
-
+  const { products, updateProduct } = useCMS();
+  const { toast } = useFeedback();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('all');
-  const [isCreating, setIsCreating] = useState(false);
-  // Opened straight into the editor when arriving from the dashboard's "Edit →" link.
-  const [editingId, setEditingId] = useState<string | null>(edit ?? null);
-  const editingProduct = products.find((p) => p.id === editingId) ?? null;
-
-  const handleDelete = (id: string) =>
-    Alert.alert('Delete product', 'Are you sure you want to delete this product from the catalogue?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteProduct(id) },
-    ]);
 
   const q = search.trim().toLowerCase();
   const filtered = products.filter(
     (p) =>
       (category === 'all' || p.category === category) &&
-      (q === '' ||
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        (p.storage?.toLowerCase().includes(q) ?? false))
+      (q === '' || p.name.toLowerCase().includes(q) || (p.storage?.toLowerCase().includes(q) ?? false)),
   );
 
-  if (isCreating) {
-    return (
-      <AdminShell title="Products Catalogue Management">
-        <ProductForm
-          title="Create New Phone Product"
-          onSubmit={(data) => {
-            addProduct(data);
-            setIsCreating(false);
-          }}
-          onCancel={() => setIsCreating(false)}
-        />
-      </AdminShell>
-    );
-  }
-
-  if (editingProduct) {
-    return (
-      <AdminShell title="Products Catalogue Management">
-        <ProductForm
-          key={editingProduct.id}
-          title={`Edit Product: ${editingProduct.name}`}
-          initialProduct={editingProduct}
-          onSubmit={(data) => {
-            updateProduct(editingProduct.id, data);
-            setEditingId(null);
-          }}
-          onCancel={() => setEditingId(null)}
-        />
-      </AdminShell>
-    );
-  }
-
   return (
-    <AdminShell title="Products Catalogue Management">
-      {/* Header controls */}
-      <View className="gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <View className="flex-row gap-3">
-          <View className="flex-1 justify-center">
-            <View className="absolute left-3 z-10">
-              <Search size={16} color="#737373" />
-            </View>
-            <TextInput
-              placeholder="Filter products..."
-              placeholderTextColor="#737373"
-              value={search}
-              onChangeText={setSearch}
-              className="rounded-xl border border-neutral-300 bg-neutral-50 py-2.5 pl-9 pr-3 text-xs text-black"
+    <>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <IconButton
+              icon={Plus}
+              accessibilityLabel="Add product"
+              size={34}
+              onPress={() => router.push({ pathname: '/admin/product/[id]', params: { id: 'new' } })}
             />
-          </View>
-          <View className="w-[140px]">
-            <Select
-              variant="admin"
-              title="Category"
-              value={category}
-              onChange={setCategory}
-              options={[
-                { label: 'All Categories', value: 'all' },
-                { label: 'Brand New', value: 'brand-new' },
-                { label: 'UK Used / Swap', value: 'uk-used' },
-                { label: 'Defect Deals', value: 'defect-deals' },
-                { label: 'Accessories', value: 'accessories' },
-              ]}
-            />
-          </View>
-        </View>
+          ),
+        }}
+      />
+      <AdminScreen contentContainerStyle={{ gap: 16 }}>
+        <SearchBar value={search} onChangeText={setSearch} placeholder="Search products" />
 
-        <Pressable
-          onPress={() => setIsCreating(true)}
-          className="flex-row items-center justify-center gap-2 rounded-xl bg-black px-5 py-2.5 shadow-md"
-        >
-          <Plus size={16} color="#fff" />
-          <Text className="text-xs font-bold text-white">Add New Product</Text>
-        </Pressable>
-      </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {CATEGORY_FILTERS.map((c) => (
+            <Chip key={c.value} label={c.label} selected={category === c.value} onPress={() => setCategory(c.value)} />
+          ))}
+        </ScrollView>
 
-      {/* Products */}
-      <View className="gap-6">
-        {filtered.map((product) => (
-          <View key={product.id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <View className="mb-3 flex-row items-start gap-3">
-              <Img
-                source={{ uri: product.image_url }}
-                className="h-16 w-16 rounded-xl border border-neutral-200 bg-neutral-100"
-                contentFit="cover"
-              />
-              <View className="flex-1">
-                <Text className="font-mono text-[10px] font-bold uppercase text-black">{product.category}</Text>
-                <Text className="font-serif text-base font-bold text-black" numberOfLines={1}>
-                  {product.name}
-                </Text>
-                <View className="mt-1 flex-row items-center gap-2">
-                  {!!product.storage && <Text className="font-mono text-xs text-neutral-600">{product.storage}</Text>}
-                  {!!product.battery_health && (
-                    <Text className="font-mono text-xs text-neutral-600">• {product.battery_health}% BH</Text>
-                  )}
+        {filtered.length === 0 ? (
+          <EmptyState
+            icon={PackageSearch}
+            title="No products found"
+            message="Try another search or add a new product."
+            actionLabel="Add product"
+            onAction={() => router.push({ pathname: '/admin/product/[id]', params: { id: 'new' } })}
+          />
+        ) : (
+          <View className="overflow-hidden rounded-2xl bg-white" style={shadows.card}>
+            {filtered.map((product, i) => (
+              <Pressable
+                key={product.id}
+                onPress={() => {
+                  haptics.selection();
+                  router.push({ pathname: '/admin/product/[id]', params: { id: product.id } });
+                }}
+                className={`flex-row items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-separator' : ''}`}
+                style={({ pressed }) => ({ backgroundColor: pressed ? colors.fill : colors.white })}
+              >
+                <Img source={{ uri: product.image_url }} className="h-14 w-14 rounded-xl bg-fill" contentFit="cover" />
+                <View className="flex-1">
+                  <Text className="text-body font-semibold text-ink" numberOfLines={1}>
+                    {product.name}
+                  </Text>
+                  <Text className="mt-0.5 text-subhead text-secondary" numberOfLines={1}>
+                    {formatNaira(product.price)} · {categoryLabel(product.category)} · {product.stock} in stock
+                  </Text>
+                  <Text
+                    className={`mt-0.5 text-caption font-medium ${product.is_published ? 'text-success' : 'text-tertiary'}`}
+                  >
+                    {product.is_published ? 'Live' : 'Hidden'}
+                  </Text>
                 </View>
-              </View>
-            </View>
-
-            <View className="mb-3 flex-row items-center gap-2">
-              <Text className="text-[10px] text-neutral-500">Badge:</Text>
-              <View className="rounded border border-neutral-300 bg-neutral-100 px-2 py-0.5">
-                <Text className="text-xs font-semibold text-black">{product.badge_label}</Text>
-              </View>
-            </View>
-
-            <Text className="text-xs text-neutral-600" numberOfLines={2}>
-              {product.condition_description || product.description}
-            </Text>
-
-            <View className="mt-4 flex-row items-center justify-between border-t border-neutral-200 pt-3">
-              <Text className="font-mono text-base font-bold text-black">{formatNaira(product.price)}</Text>
-              <View className="flex-row items-center gap-2">
-                <Pressable
-                  onPress={() => updateProduct(product.id, { is_published: !product.is_published })}
-                  accessibilityLabel={product.is_published ? 'Published (Live)' : 'Draft (Hidden)'}
-                  className={`rounded-lg border p-2 ${
-                    product.is_published ? 'border-black bg-black' : 'border-neutral-300 bg-neutral-100'
-                  }`}
-                >
-                  {product.is_published ? <Eye size={16} color="#fff" /> : <EyeOff size={16} color="#737373" />}
-                </Pressable>
-                <Pressable
-                  onPress={() => setEditingId(product.id)}
-                  accessibilityLabel="Edit product"
-                  className="rounded-lg border border-neutral-300 bg-neutral-100 p-2"
-                >
-                  <Edit2 size={16} color="#000" />
-                </Pressable>
-                <Pressable
-                  onPress={() => handleDelete(product.id)}
-                  accessibilityLabel="Delete product"
-                  className="rounded-lg border border-neutral-300 bg-neutral-100 p-2"
-                >
-                  <Trash2 size={16} color="#000" />
-                </Pressable>
-              </View>
-            </View>
+                <Switch
+                  value={product.is_published}
+                  onValueChange={(v) => {
+                    updateProduct(product.id, { is_published: v });
+                    toast(v ? 'Published to storefront' : 'Hidden from storefront');
+                  }}
+                  trackColor={{ true: colors.ink, false: colors.separator }}
+                  thumbColor={colors.white}
+                  accessibilityLabel={`Show ${product.name} in store`}
+                />
+              </Pressable>
+            ))}
           </View>
-        ))}
-
-        {filtered.length === 0 && (
-          <Text className="py-10 text-center text-sm text-neutral-600">No products match this filter.</Text>
         )}
-      </View>
-    </AdminShell>
+      </AdminScreen>
+    </>
   );
 }

@@ -1,87 +1,105 @@
 import * as Clipboard from 'expo-clipboard';
-import { Check, Cloud, Copy } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Stack } from 'expo-router';
+import { Cloud, CloudOff, Copy, Plus } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, useWindowDimensions, View } from 'react-native';
 
-import { AdminShell, Panel } from '@/components/admin/AdminShell';
-import { ImageUploader } from '@/components/admin/ImageUploader';
-import { Img } from '@/components/ui/primitives';
+import { AdminScreen } from '@/components/admin/AdminScreen';
+import { useFeedback } from '@/components/ui/Feedback';
+import { IconButton, Img } from '@/components/ui/primitives';
+import { colors, shadows } from '@/components/ui/theme';
 import { useCMS } from '@/lib/store';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured, uploadImageToStorage } from '@/lib/supabase';
+
+const GAP = 6;
 
 export default function AdminMediaScreen() {
   const { media, addMedia } = useCMS();
-  const [currentUpload, setCurrentUpload] = useState('');
-  const [copiedUrl, setCopiedUrl] = useState('');
+  const { toast, showActions } = useFeedback();
+  const { width } = useWindowDimensions();
+  const [uploading, setUploading] = useState(false);
+  const tile = (width - 32 - GAP * 2) / 3;
 
-  const copy = async (url: string) => {
-    await Clipboard.setStringAsync(url);
-    setCopiedUrl(url);
-    setTimeout(() => setCopiedUrl(''), 2000);
+  const upload = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+    setUploading(true);
+    try {
+      addMedia(
+        isSupabaseConfigured ? await uploadImageToStorage(asset.uri, asset.mimeType ?? 'image/jpeg') : asset.uri,
+      );
+      toast('Photo added');
+    } catch (err) {
+      console.error(err);
+      toast('Upload failed', 'error');
+    } finally {
+      setUploading(false);
+    }
   };
 
+  const openAsset = (url: string) =>
+    showActions({
+      options: [
+        {
+          label: 'Copy image link',
+          icon: Copy,
+          onPress: async () => {
+            await Clipboard.setStringAsync(url);
+            toast('Link copied');
+          },
+        },
+      ],
+    });
+
   return (
-    <AdminShell title="Supabase Cloud Storage Media Manager">
-      {/* Cloud status */}
-      <View className="gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <View className="flex-row items-center gap-4">
-          <View className="h-12 w-12 items-center justify-center rounded-xl bg-black">
-            <Cloud size={24} color="#fff" />
+    <>
+      <Stack.Screen
+        options={{
+          headerRight: () =>
+            uploading ? (
+              <ActivityIndicator color={colors.ink} />
+            ) : (
+              <IconButton icon={Plus} accessibilityLabel="Upload photo" size={34} onPress={upload} />
+            ),
+        }}
+      />
+      <AdminScreen contentContainerStyle={{ gap: 20 }}>
+        <View className="flex-row items-center gap-3 rounded-2xl bg-white p-4" style={shadows.card}>
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-fill">
+            {isSupabaseConfigured ? <Cloud size={20} color={colors.ink} /> : <CloudOff size={20} color={colors.ink} />}
           </View>
           <View className="flex-1">
-            <Text className="font-serif text-lg font-bold text-black">
-              Bucket: <Text className="font-mono font-extrabold">dr-apple-assets</Text>
+            <Text className="text-body font-semibold text-ink">
+              {isSupabaseConfigured ? 'Supabase Storage connected' : 'Saving on this device'}
             </Text>
-            <Text className="text-xs text-neutral-600">
+            <Text className="text-subhead text-secondary">
               {isSupabaseConfigured
-                ? 'Connected to Supabase PostgreSQL & Cloud Storage'
-                : 'Local Preview & Direct Storage Fallback Active'}
+                ? 'Uploads go to the dr-apple-assets bucket.'
+                : 'Add Supabase keys to share uploads across devices.'}
             </Text>
           </View>
         </View>
-        <View className="self-start rounded-full border border-neutral-300 bg-neutral-100 px-3 py-1">
-          <Text className="font-mono text-xs font-bold text-black">
-            {isSupabaseConfigured ? 'Supabase Live' : 'Storage Engine Ready'}
+
+        <View>
+          <Text className="mb-2 px-1 text-subhead text-secondary">
+            {media.length} {media.length === 1 ? 'photo' : 'photos'}
           </Text>
+          <View className="flex-row flex-wrap" style={{ gap: GAP }}>
+            {media.map((url) => (
+              <Pressable
+                key={url}
+                onPress={() => openAsset(url)}
+                accessibilityLabel="Photo options"
+                style={({ pressed }) => ({ width: tile, height: tile, opacity: pressed ? 0.7 : 1 })}
+              >
+                <Img source={{ uri: url }} className="h-full w-full rounded-lg bg-fill" contentFit="cover" />
+              </Pressable>
+            ))}
+          </View>
         </View>
-      </View>
-
-      {/* Uploader */}
-      <Panel>
-        <Text className="font-serif text-base font-bold text-black">Upload Asset to Cloud Storage</Text>
-        <ImageUploader
-          value={currentUpload}
-          onChange={(url) => {
-            setCurrentUpload(url);
-            addMedia(url);
-          }}
-          label="Select file to upload to dr-apple-assets bucket"
-        />
-      </Panel>
-
-      {/* Gallery */}
-      <View className="gap-4">
-        <Text className="font-serif text-lg font-bold text-black">Uploaded Assets Gallery ({media.length})</Text>
-        <View className="flex-row flex-wrap justify-between gap-y-4">
-          {media.map((url) => (
-            <View key={url} className="w-[48%] overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-              <Img source={{ uri: url }} className="aspect-square w-full bg-neutral-100" contentFit="cover" />
-              <View className="flex-row items-center justify-between gap-2 border-t border-neutral-200 bg-neutral-50 p-3">
-                <Text className="flex-1 font-mono text-[10px] text-neutral-600" numberOfLines={1}>
-                  {url}
-                </Text>
-                <Pressable
-                  onPress={() => copy(url)}
-                  accessibilityLabel="Copy URL reference"
-                  className="rounded-lg border border-neutral-300 bg-neutral-100 p-1.5"
-                >
-                  {copiedUrl === url ? <Check size={14} color="#000" /> : <Copy size={14} color="#000" />}
-                </Pressable>
-              </View>
-            </View>
-          ))}
-        </View>
-      </View>
-    </AdminShell>
+      </AdminScreen>
+    </>
   );
 }

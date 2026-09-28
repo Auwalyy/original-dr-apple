@@ -1,11 +1,10 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
 import type { PropsWithChildren } from 'react';
 
-// Web-only document. NativeWind's platformSelect() (used for font-serif / font-mono in
+// Web-only document. NativeWind's platformSelect() (used for font-serif in
 // tailwind.config.js) resolves on iOS/Android but not in web CSS, so the web stacks live here.
 const webFonts = `
 .font-serif { font-family: Georgia, Cambria, 'Times New Roman', Times, serif !important; }
-.font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important; }
 body { background-color: #ffffff; color: #000000; -webkit-tap-highlight-color: transparent; }
 `;
 

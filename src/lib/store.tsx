@@ -1,13 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-import {
-  INITIAL_MEDIA,
-  INITIAL_PRODUCTS,
-  INITIAL_SITE_SETTINGS,
-  INITIAL_SWAP_PROGRAM,
-  INITIAL_USERS,
-} from './seed';
+import { INITIAL_MEDIA, INITIAL_PRODUCTS, INITIAL_SITE_SETTINGS, INITIAL_SWAP_PROGRAM, INITIAL_USERS } from './seed';
 import { AdminSession, Product, Role, SiteSettings, SwapProgramContent, UserProfile } from './types';
 
 // Same keys as the website's localStorage demo mode.
@@ -105,9 +99,7 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
       commitProducts([product, ...products]);
     },
     updateProduct: (id, data) => {
-      commitProducts(
-        products.map((p) => (p.id === id ? { ...p, ...data, updated_at: new Date().toISOString() } : p))
-      );
+      commitProducts(products.map((p) => (p.id === id ? { ...p, ...data, updated_at: new Date().toISOString() } : p)));
     },
     deleteProduct: (id) => commitProducts(products.filter((p) => p.id !== id)),
     saveSiteSettings: (next) => {

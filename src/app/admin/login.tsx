@@ -1,14 +1,14 @@
 import { Redirect, router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { ArrowRight, Key, Mail, Shield, UserCheck } from 'lucide-react-native';
+import { Lock, Mail, Shield, UserCheck, X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BrandMark } from '@/components/ui/primitives';
+import { BrandMark, Button, IconButton, TextField } from '@/components/ui/primitives';
 import { useCMS } from '@/lib/store';
 import { AdminSession, Role } from '@/lib/types';
 
-// Demo authentication, identical to the website: the email decides the role.
+// Demo authentication, as on the website: the email decides the role.
 function sessionForEmail(email: string): AdminSession {
   if (email.includes('super') || email.includes('admin@drapple')) {
     return { email, role: 'Super Admin', name: 'Dr. Apple CEO' };
@@ -16,13 +16,15 @@ function sessionForEmail(email: string): AdminSession {
   if (email.includes('store') || email.includes('content')) {
     return { email, role: 'Content Admin', name: 'Kano Store Manager' };
   }
-  return { email: email || 'admin@drapple.ng', role: 'Super Admin', name: 'Super Admin' };
+  return { email, role: 'Super Admin', name: 'Super Admin' };
 }
 
 export default function AdminLoginScreen() {
   const { session, login } = useCMS();
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
 
   if (session) return <Redirect href="/admin" />;
@@ -33,118 +35,106 @@ export default function AdminLoginScreen() {
   };
 
   const handleLogin = () => {
-    if (!email.trim() || !password) return;
+    const trimmed = email.trim().toLowerCase();
+    const nextErrors = {
+      email: !/^\S+@\S+\.\S+$/.test(trimmed) ? 'Enter a valid email address' : undefined,
+      password: password.length === 0 ? 'Enter your password' : undefined,
+    };
+    setErrors(nextErrors);
+    if (nextErrors.email || nextErrors.password) return;
+
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      enter(sessionForEmail(email.trim().toLowerCase()));
-    }, 400);
+      enter(sessionForEmail(trimmed));
+    }, 500);
   };
 
-  const handleQuickDemo = (role: Role) =>
+  const demo = (role: Role) =>
     enter({
       email: role === 'Super Admin' ? 'admin@drapple.ng' : 'store@drapple.ng',
       role,
-      name: role === 'Super Admin' ? 'Dr. Apple CEO' : 'Kano Content Admin',
+      name: role === 'Super Admin' ? 'Dr. Apple CEO' : 'Kano Store Manager',
     });
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-white" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <StatusBar style="dark" />
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 16 }}
+        contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}
       >
-        {/* Soft background accent */}
-        <View
-          className="absolute h-[420px] w-[420px] rounded-full bg-neutral-100 opacity-70"
-          style={{ left: '50%', top: '33%', marginLeft: -210 }}
-        />
+        <View className="px-4">
+          <IconButton
+            icon={X}
+            accessibilityLabel="Close"
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/store'))}
+          />
+        </View>
 
-        <View className="w-full max-w-md self-center rounded-2xl border border-neutral-200 bg-white p-8 shadow-xl">
-          <View className="mb-8 items-center">
-            <View className="mb-4">
-              <BrandMark size={56} radius={16} />
-            </View>
-            <Text className="font-serif text-2xl font-bold uppercase tracking-[2.4px] text-black">DR APPLE CMS</Text>
-            <Text className="mt-1 text-center text-xs text-neutral-500">Kano Store Admin & Dynamic CMS Management</Text>
+        <View className="flex-1 justify-center px-6">
+          <BrandMark size={56} />
+          <Text className="mt-6 font-serif text-display font-bold text-ink">Staff sign in</Text>
+          <Text className="mt-1 text-body text-secondary">
+            Manage products, banners and swap content for the Kano store.
+          </Text>
+
+          <View className="mt-8 gap-4">
+            <TextField
+              label="Email"
+              icon={Mail}
+              placeholder="you@drapple.ng"
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              textContentType="username"
+              returnKeyType="next"
+              value={email}
+              onChangeText={(t) => {
+                setEmail(t);
+                if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
+              }}
+              error={errors.email}
+            />
+            <TextField
+              label="Password"
+              icon={Lock}
+              placeholder="Password"
+              secureTextEntry
+              textContentType="password"
+              returnKeyType="go"
+              onSubmitEditing={handleLogin}
+              value={password}
+              onChangeText={(t) => {
+                setPassword(t);
+                if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
+              }}
+              error={errors.password}
+            />
+            <Button title="Sign in" size="lg" loading={loading} onPress={handleLogin} className="mt-2" />
           </View>
 
-          <View className="gap-4">
-            <View>
-              <Text className="mb-1 text-xs font-semibold text-neutral-800">Admin Email Address</Text>
-              <View className="justify-center">
-                <View className="absolute left-3 z-10">
-                  <Mail size={16} color="#a3a3a3" />
-                </View>
-                <TextInput
-                  placeholder="admin@drapple.ng"
-                  placeholderTextColor="#a3a3a3"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={setEmail}
-                  className="rounded-xl border border-neutral-300 bg-neutral-50 py-2.5 pl-9 pr-3 text-xs text-black"
-                />
-              </View>
-            </View>
-
-            <View>
-              <Text className="mb-1 text-xs font-semibold text-neutral-800">Password</Text>
-              <View className="justify-center">
-                <View className="absolute left-3 z-10">
-                  <Key size={16} color="#a3a3a3" />
-                </View>
-                <TextInput
-                  placeholder="••••••••••••"
-                  placeholderTextColor="#a3a3a3"
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
-                  onSubmitEditing={handleLogin}
-                  className="rounded-xl border border-neutral-300 bg-neutral-50 py-2.5 pl-9 pr-3 text-xs text-black"
-                />
-              </View>
-            </View>
-
-            <Pressable
-              onPress={handleLogin}
-              disabled={loading}
-              className="mt-2 flex-row items-center justify-center gap-2 rounded-xl bg-black py-3.5 shadow-lg active:bg-neutral-800"
-            >
-              <Text className="text-xs font-bold text-white">
-                {loading ? 'Authenticating...' : 'Sign In to Admin Dashboard'}
-              </Text>
-              <ArrowRight size={16} color="#fff" />
-            </Pressable>
+          <View className="my-8 flex-row items-center gap-3">
+            <View className="h-px flex-1 bg-separator" />
+            <Text className="text-subhead text-secondary">or try a demo account</Text>
+            <View className="h-px flex-1 bg-separator" />
           </View>
 
-          {/* Quick demo access */}
-          <View className="mt-8 gap-3 border-t border-neutral-200 pt-6">
-            <Text className="text-center font-mono text-[11px] uppercase tracking-[1.1px] text-neutral-500">
-              ⚡ Quick Demo Admin Access (RBAC)
-            </Text>
-            <View className="flex-row gap-2">
-              <Pressable
-                onPress={() => handleQuickDemo('Super Admin')}
-                className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl border border-black bg-black py-2.5"
-              >
-                <Shield size={14} color="#fff" />
-                <Text className="text-xs font-semibold text-white">Super Admin</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => handleQuickDemo('Content Admin')}
-                className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl border border-neutral-300 bg-neutral-100 py-2.5"
-              >
-                <UserCheck size={14} color="#000" />
-                <Text className="text-xs font-semibold text-black">Content Admin</Text>
-              </Pressable>
-            </View>
+          <View className="flex-row gap-3">
+            <Button
+              title="Super Admin"
+              variant="secondary"
+              icon={Shield}
+              className="flex-1"
+              onPress={() => demo('Super Admin')}
+            />
+            <Button
+              title="Content Admin"
+              variant="secondary"
+              icon={UserCheck}
+              className="flex-1"
+              onPress={() => demo('Content Admin')}
+            />
           </View>
-
-          <Pressable onPress={() => router.navigate('/')} className="mt-6 items-center">
-            <Text className="text-xs text-neutral-500">← Back to Storefront</Text>
-          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

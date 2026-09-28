@@ -2,76 +2,106 @@ import { Check, ChevronDown } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { haptics } from '@/lib/haptics';
+
+import { Img } from './primitives';
 import { Sheet } from './Sheet';
+import { colors } from './theme';
 
 export interface SelectOption<T extends string> {
   label: string;
   value: T;
+  description?: string;
+  image?: string;
 }
 
 interface SelectProps<T extends string> {
   value: T;
   options: SelectOption<T>[];
   onChange: (value: T) => void;
-  title?: string;
-  /** `rounded-lg bg-white` (storefront) or `rounded-xl bg-neutral-50` (admin). */
-  variant?: 'store' | 'admin';
-  className?: string;
+  /** Field label, also used as the sheet title. */
+  label?: string;
+  placeholder?: string;
 }
 
-/** Native replacement for the website's <select> elements. */
-export function Select<T extends string>({
-  value,
-  options,
-  onChange,
-  title,
-  variant = 'store',
-  className = '',
-}: SelectProps<T>) {
+/** A form field that opens a bottom-sheet list — the native replacement for <select>. */
+export function Select<T extends string>({ value, options, onChange, label, placeholder = 'Select' }: SelectProps<T>) {
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
 
   return (
-    <>
+    <View className="gap-1.5">
+      {!!label && <Text className="text-subhead font-medium text-secondary">{label}</Text>}
       <Pressable
-        onPress={() => setOpen(true)}
-        className={`flex-row items-center justify-between border border-neutral-300 px-3 py-2.5 ${
-          variant === 'store' ? 'rounded-lg bg-white' : 'rounded-xl bg-neutral-50'
-        } ${className}`}
+        onPress={() => {
+          haptics.selection();
+          setOpen(true);
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        className="h-12 flex-row items-center justify-between rounded-xl bg-fill px-4"
       >
-        <Text className="flex-1 text-xs font-medium text-black" numberOfLines={1}>
-          {current?.label ?? 'Select…'}
+        <Text className={`flex-1 text-body ${current ? 'text-ink' : 'text-tertiary'}`} numberOfLines={1}>
+          {current?.label ?? placeholder}
         </Text>
-        <ChevronDown size={14} color="#525252" />
+        <ChevronDown size={18} color={colors.secondary} />
       </Pressable>
 
-      <Sheet visible={open} onClose={() => setOpen(false)} maxHeight="70%">
-        {title && (
-          <Text className="mb-3 font-mono text-[11px] uppercase tracking-[1.5px] text-neutral-500">{title}</Text>
-        )}
-        <View className="gap-1">
-          {options.map((opt) => {
-            const active = opt.value === value;
-            return (
-              <Pressable
-                key={opt.value}
-                onPress={() => {
-                  onChange(opt.value);
-                  setOpen(false);
-                }}
-                className={`flex-row items-center justify-between rounded-xl px-3.5 py-3 ${
-                  active ? 'bg-black' : 'bg-white'
-                }`}
-              >
-                <Text className={`flex-1 text-xs ${active ? 'font-bold text-white' : 'font-medium text-neutral-700'}`}>
-                  {opt.label}
-                </Text>
-                {active && <Check size={14} color="#fff" />}
-              </Pressable>
-            );
-          })}
-        </View>
-      </Sheet>
-    </>
+      <OptionSheet
+        visible={open}
+        title={label}
+        value={value}
+        options={options}
+        onClose={() => setOpen(false)}
+        onChange={onChange}
+      />
+    </View>
+  );
+}
+
+export function OptionSheet<T extends string>({
+  visible,
+  title,
+  value,
+  options,
+  onClose,
+  onChange,
+}: {
+  visible: boolean;
+  title?: string;
+  value: T;
+  options: SelectOption<T>[];
+  onClose: () => void;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <Sheet visible={visible} onClose={onClose} title={title}>
+      <View className="gap-1">
+        {options.map((opt) => {
+          const active = opt.value === value;
+          return (
+            <Pressable
+              key={opt.value}
+              onPress={() => {
+                haptics.selection();
+                onChange(opt.value);
+                onClose();
+              }}
+              className="min-h-[52px] flex-row items-center gap-3 rounded-xl px-3 py-2.5"
+              style={({ pressed }) => ({ backgroundColor: active || pressed ? colors.fill : 'transparent' })}
+            >
+              {!!opt.image && (
+                <Img source={{ uri: opt.image }} className="h-11 w-11 rounded-lg bg-fill" contentFit="cover" />
+              )}
+              <View className="flex-1">
+                <Text className={`text-body ${active ? 'font-semibold' : ''} text-ink`}>{opt.label}</Text>
+                {!!opt.description && <Text className="mt-0.5 text-subhead text-secondary">{opt.description}</Text>}
+              </View>
+              {active && <Check size={20} color={colors.ink} strokeWidth={2.5} />}
+            </Pressable>
+          );
+        })}
+      </View>
+    </Sheet>
   );
 }
