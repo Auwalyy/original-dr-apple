@@ -1,14 +1,9 @@
 import { ArrowRight, Award, MapPin, MessageSquare, RefreshCw, ShieldCheck } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
-import Animated, {
-  FadeInDown,
-  interpolate,
-  SharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import Animated, { interpolate, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
-import { Gradient, Img, Ping } from '@/components/ui/primitives';
+import { Gradient, Img, Ping, Reveal } from '@/components/ui/primitives';
 import { SiteSettings } from '@/lib/types';
 
 interface HeroSectionProps {
@@ -17,8 +12,6 @@ interface HeroSectionProps {
   onExploreClick: () => void;
   onSwapClick: () => void;
 }
-
-const fadeUp = (delay: number) => FadeInDown.duration(800).delay(delay).withInitialValues({ transform: [{ translateY: 20 }] });
 
 export function HeroSection({ settings, scrollY, onExploreClick, onSwapClick }: HeroSectionProps) {
   const { height } = useWindowDimensions();
@@ -35,7 +28,7 @@ export function HeroSection({ settings, scrollY, onExploreClick, onSwapClick }: 
   return (
     <View className="items-center justify-center overflow-hidden bg-white px-4 pb-16 pt-12" style={{ minHeight }}>
       {/* Parallax background with light vignette */}
-      <Animated.View className="absolute inset-0" style={bgStyle}>
+      <Animated.View style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, bgStyle]}>
         <Img
           source={{ uri: settings.hero_bg_image }}
           className="h-full w-full opacity-25"
@@ -45,35 +38,32 @@ export function HeroSection({ settings, scrollY, onExploreClick, onSwapClick }: 
         <Gradient colors={['transparent', 'rgba(255,255,255,0.8)', '#ffffff']} className="absolute inset-0" />
       </Animated.View>
 
-      <Animated.View className="w-full items-center" style={textStyle}>
+      <Animated.View style={[{ width: '100%' }, textStyle]}>
         {/* Kano location pill */}
-        <Animated.View
-          entering={fadeUp(0)}
-          className="mb-6 flex-row items-center gap-2 rounded-full border border-neutral-300 bg-neutral-100 px-3.5 py-1.5 shadow-md"
-        >
-          <MapPin size={14} color="#000" />
-          <Text className="font-mono text-[11px] uppercase tracking-[1.1px] text-black">
-            Kano’s #1 Verified Apple Destination
+        <Reveal className="items-center">
+          <View className="mb-6 flex-row items-center gap-2 rounded-full border border-neutral-300 bg-neutral-100 px-3.5 py-1.5 shadow-md">
+            <MapPin size={14} color="#000" />
+            <Text className="font-mono text-[11px] uppercase tracking-[1.1px] text-black">
+              Kano’s #1 Verified Apple Destination
+            </Text>
+            <Ping />
+          </View>
+        </Reveal>
+
+        <Reveal delay={200}>
+          <Text className="text-center font-serif text-[32px] font-extrabold leading-[36px] tracking-tight text-black">
+            {settings.hero_title}
           </Text>
-          <Ping />
-        </Animated.View>
+        </Reveal>
 
-        <Animated.Text
-          entering={fadeUp(200)}
-          className="text-center font-serif text-[32px] font-extrabold leading-[36px] tracking-tight text-black"
-        >
-          {settings.hero_title}
-        </Animated.Text>
-
-        <Animated.Text
-          entering={fadeUp(400)}
-          className="mt-6 max-w-2xl text-center text-sm font-light leading-relaxed text-neutral-700"
-        >
-          {settings.hero_subtitle}
-        </Animated.Text>
+        <Reveal delay={400}>
+          <Text className="mt-6 text-center text-sm font-light leading-relaxed text-neutral-700">
+            {settings.hero_subtitle}
+          </Text>
+        </Reveal>
 
         {/* CTAs */}
-        <Animated.View entering={fadeUp(600)} className="mt-8 w-full gap-3.5 px-4">
+        <Reveal delay={600} className="mt-8 w-full gap-3.5 px-4">
           <Pressable
             onPress={onExploreClick}
             className="flex-row items-center justify-center gap-2 rounded-xl bg-black px-8 py-4 shadow-xl active:bg-neutral-800"
@@ -89,14 +79,10 @@ export function HeroSection({ settings, scrollY, onExploreClick, onSwapClick }: 
             <RefreshCw size={16} color="#000" />
             <Text className="text-xs font-semibold text-black">Kano Phone Swap Calculator</Text>
           </Pressable>
-        </Animated.View>
+        </Reveal>
 
         {/* Kano trust pillars */}
-        <Animated.View
-          entering={fadeUp(800)}
-          className="mt-12 w-full flex-row flex-wrap border-t border-neutral-200/80 pt-8"
-          style={{ rowGap: 16 }}
-        >
+        <Reveal delay={800} className="mt-12 w-full flex-row flex-wrap gap-y-4 border-t border-neutral-200/80 pt-8">
           <Pillar icon={<ShieldCheck size={20} color="#000" />} title="100% Tested Devices" sub="50-Point Kano Engineer Audit" />
           <Pillar icon={<Award size={20} color="#000" />} title="Store Guarantee" sub="Up to 12 Months Support" />
           <Pillar
@@ -105,7 +91,7 @@ export function HeroSection({ settings, scrollY, onExploreClick, onSwapClick }: 
             title="Instant WhatsApp Order"
             sub="Direct Kano Dispatch"
           />
-        </Animated.View>
+        </Reveal>
       </Animated.View>
     </View>
   );

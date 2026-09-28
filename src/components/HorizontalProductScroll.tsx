@@ -1,9 +1,7 @@
 import { Sparkles } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-
-import { Eyebrow } from '@/components/ui/primitives';
+import { Eyebrow, Reveal } from '@/components/ui/primitives';
 import { CategoryFilter, Product } from '@/lib/types';
 
 import { ProductCard } from './ProductCard';
@@ -44,7 +42,7 @@ export function HorizontalProductScroll({
 
   return (
     <View className="bg-white py-16">
-      <Animated.View entering={FadeInDown.duration(800)} className="mb-8 gap-6 px-4">
+      <Reveal className="mb-8 gap-6 px-4">
         <View>
           <View className="mb-2">
             <Eyebrow icon={<Sparkles size={14} color="#000" />}>Solène Fragrance Curated Catalogue</Eyebrow>
@@ -75,7 +73,7 @@ export function HorizontalProductScroll({
             );
           })}
         </ScrollView>
-      </Animated.View>
+      </Reveal>
 
       {products.length === 0 ? (
         <View className="mx-4 items-center rounded-2xl border border-neutral-200 bg-neutral-50 p-12">
@@ -85,7 +83,7 @@ export function HorizontalProductScroll({
           </Pressable>
         </View>
       ) : (
-        <Animated.View entering={FadeInDown.duration(800).delay(200)}>
+        <Reveal delay={200}>
           <FlatList
             horizontal
             data={products}
@@ -113,7 +111,7 @@ export function HorizontalProductScroll({
               style={{ width: `${thumbRatio * 100}%`, marginLeft: `${thumbOffset * 100}%` }}
             />
           </View>
-        </Animated.View>
+        </Reveal>
       )}
     </View>
   );

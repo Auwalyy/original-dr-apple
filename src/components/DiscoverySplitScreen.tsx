@@ -1,17 +1,14 @@
 import { RefreshCw, Shield, Zap } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { Gradient, Img } from '@/components/ui/primitives';
+import { Gradient, Img, Reveal } from '@/components/ui/primitives';
 import { SwapProgramContent } from '@/lib/types';
 
 interface DiscoverySplitScreenProps {
   content: SwapProgramContent;
   onStartSwapClick: () => void;
 }
-
-const reveal = (delay = 0) => FadeInDown.duration(800).delay(delay);
 
 export function DiscoverySplitScreen({ content, onStartSwapClick }: DiscoverySplitScreenProps) {
   const steps = [
@@ -23,10 +20,7 @@ export function DiscoverySplitScreen({ content, onStartSwapClick }: DiscoverySpl
   return (
     <View className="gap-10 border-y border-neutral-200 bg-neutral-50 px-4 py-20">
       {/* Pinned image */}
-      <Animated.View
-        entering={reveal()}
-        className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl"
-      >
+      <Reveal className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl">
         <View className="aspect-[4/5] w-full bg-neutral-100">
           <Img source={{ uri: content.pinned_image_url }} className="h-full w-full" contentFit="cover" />
         </View>
@@ -47,10 +41,10 @@ export function DiscoverySplitScreen({ content, onStartSwapClick }: DiscoverySpl
             </View>
           </View>
         </View>
-      </Animated.View>
+      </Reveal>
 
       {/* Narrative */}
-      <Animated.View entering={reveal()}>
+      <Reveal>
         <View className="mb-4 flex-row items-center gap-2 self-start rounded-full border border-neutral-300 bg-white px-3 py-1 shadow-sm">
           <Zap size={14} color="#000" />
           <Text className="font-mono text-xs uppercase tracking-[1.2px] text-black">
@@ -59,14 +53,10 @@ export function DiscoverySplitScreen({ content, onStartSwapClick }: DiscoverySpl
         </View>
         <Text className="font-serif text-3xl font-bold leading-tight text-black">{content.title}</Text>
         <Text className="mt-4 text-sm font-light leading-relaxed text-neutral-700">{content.subtitle}</Text>
-      </Animated.View>
+      </Reveal>
 
       {steps.map((step, i) => (
-        <Animated.View
-          key={step.n}
-          entering={reveal(100 * (i + 1))}
-          className="rounded-xl border border-neutral-200 bg-white p-6 shadow-md"
-        >
+        <Reveal key={step.n} delay={100 * (i + 1)} className="rounded-xl border border-neutral-200 bg-white p-6 shadow-md">
           <View className="flex-row items-start gap-4">
             <View className="mt-0.5 h-8 w-8 items-center justify-center rounded-full bg-black">
               <Text className="text-sm font-bold text-white">{step.n}</Text>
@@ -76,11 +66,11 @@ export function DiscoverySplitScreen({ content, onStartSwapClick }: DiscoverySpl
               <Text className="mt-2 text-xs font-light leading-relaxed text-neutral-600">{step.desc}</Text>
             </View>
           </View>
-        </Animated.View>
+        </Reveal>
       ))}
 
       {/* Guarantee */}
-      <Animated.View entering={reveal(400)} className="rounded-xl border border-black bg-white p-6 shadow-lg">
+      <Reveal delay={400} className="rounded-xl border border-black bg-white p-6 shadow-lg">
         <View className="mb-3 flex-row items-center gap-2.5">
           <Shield size={20} color="#000" />
           <Text className="text-xs font-semibold uppercase tracking-[0.6px] text-black">Kano Trade-in Guarantee</Text>
@@ -93,7 +83,7 @@ export function DiscoverySplitScreen({ content, onStartSwapClick }: DiscoverySpl
           <RefreshCw size={16} color="#fff" />
           <Text className="text-xs font-bold text-white">Calculate Trade-In Value Now</Text>
         </Pressable>
-      </Animated.View>
+      </Reveal>
     </View>
   );
 }
