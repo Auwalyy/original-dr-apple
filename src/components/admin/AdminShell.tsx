@@ -9,6 +9,7 @@ import {
   Menu,
   Package,
   RefreshCw,
+  Save,
   Shield,
   Sliders,
   Store,
@@ -208,6 +209,18 @@ function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void })
 /** White bordered card used by every admin panel. */
 export function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <View className={`gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm ${className}`}>{children}</View>;
+}
+
+export function PublishButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center justify-center gap-2 rounded-xl bg-black px-6 py-2.5 shadow-md active:bg-neutral-800"
+    >
+      <Save size={16} color="#fff" />
+      <Text className="text-xs font-bold text-white">{label}</Text>
+    </Pressable>
+  );
 }
 
 export function SavedBanner({ message }: { message: string }) {

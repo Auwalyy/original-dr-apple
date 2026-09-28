@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
-import { Check, Loader2, Upload } from 'lucide-react-native';
+import { Check, Upload } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 
