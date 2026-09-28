@@ -8,6 +8,8 @@ import { ProductCard } from './ProductCard';
 
 const CARD_WIDTH = 260;
 const GAP = 16;
+// Conditional shadows must use `style`, not className (see Navbar).
+const ACTIVE_SHADOW = '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)';
 
 const CATEGORIES: { label: string; value: CategoryFilter }[] = [
   { label: 'All Collection', value: 'all' },
@@ -64,7 +66,8 @@ export function HorizontalProductScroll({
               <Pressable
                 key={cat.value}
                 onPress={() => onSelectCategory(cat.value)}
-                className={`rounded-lg px-3 py-1.5 ${active ? 'bg-black shadow-md' : ''}`}
+                className={`rounded-lg px-3 py-1.5 ${active ? 'bg-black' : ''}`}
+                style={{ boxShadow: active ? ACTIVE_SHADOW : 'none' }}
               >
                 <Text className={`text-xs ${active ? 'font-bold text-white' : 'font-medium text-neutral-600'}`}>
                   {cat.label}

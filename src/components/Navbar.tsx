@@ -48,12 +48,13 @@ export function Navbar({
       </View>
 
       {/* Main navbar */}
+      {/* Shadow goes through `style`: toggling shadow-* classes makes NativeWind remount the view
+          outside the navigation context ("Couldn't find a navigation context"). */}
       <View
         className={`flex-row items-center justify-between px-4 py-3.5 ${
-          scrolled
-            ? 'border-b border-black/10 bg-white/95 shadow-lg'
-            : 'border-b border-neutral-200/80 bg-white/80'
+          scrolled ? 'border-b border-black/10 bg-white/95' : 'border-b border-neutral-200/80 bg-white/80'
         }`}
+        style={{ boxShadow: scrolled ? '0 10px 30px -10px rgba(0,0,0,0.08)' : 'none' }}
       >
         <Pressable
           onPress={() => setMenuOpen((v) => !v)}

@@ -167,7 +167,11 @@ function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void })
                     <Pressable
                       key={item.path}
                       onPress={() => go(item.path)}
-                      className={`flex-row items-center gap-3 rounded-xl px-3.5 py-2.5 ${active ? 'bg-black shadow-md' : ''}`}
+                      className={`flex-row items-center gap-3 rounded-xl px-3.5 py-2.5 ${active ? 'bg-black' : ''}`}
+                      style={{
+                        // Conditional shadows must use `style`, not className (see Navbar).
+                        boxShadow: active ? '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)' : 'none',
+                      }}
                     >
                       <Icon size={16} color={active ? '#fff' : 'rgba(0,0,0,0.7)'} />
                       <Text className={`text-xs ${active ? 'font-bold text-white' : 'font-medium text-neutral-600'}`}>
