@@ -66,8 +66,9 @@ export default function AdminProductsScreen() {
                   haptics.selection();
                   router.push({ pathname: '/admin/product/[id]', params: { id: product.id } });
                 }}
-                className={`flex-row items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-separator' : ''}`}
-                style={({ pressed }) => ({ backgroundColor: pressed ? colors.fill : colors.white })}
+                className={`flex-row items-center gap-3 bg-white px-4 py-3 active:bg-fill ${
+                  i > 0 ? 'border-t border-separator' : ''
+                }`}
               >
                 <Img source={{ uri: product.image_url }} className="h-14 w-14 rounded-xl bg-fill" contentFit="cover" />
                 <View className="flex-1">

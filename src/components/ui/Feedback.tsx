@@ -98,8 +98,9 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
                       // Let the sheet close before running actions that open new UI.
                       setTimeout(opt.onPress, 250);
                     }}
-                    className={`min-h-[54px] flex-row items-center gap-3 px-4 ${i > 0 ? 'border-t border-separator' : ''}`}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                    className={`min-h-[54px] flex-row items-center gap-3 px-4 active:opacity-60 ${
+                      i > 0 ? 'border-t border-separator' : ''
+                    }`}
                   >
                     {Icon && <Icon size={20} color={opt.destructive ? colors.danger : colors.ink} />}
                     <Text className={`text-headline ${opt.destructive ? 'text-danger' : 'text-ink'}`}>{opt.label}</Text>
@@ -109,8 +110,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
             </View>
             <Pressable
               onPress={() => setSheet(null)}
-              className="mt-3 h-[54px] items-center justify-center rounded-2xl bg-fill"
-              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+              className="mt-3 h-[54px] items-center justify-center rounded-2xl bg-fill active:opacity-60"
             >
               <Text className="text-headline font-semibold text-ink">Cancel</Text>
             </Pressable>

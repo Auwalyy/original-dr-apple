@@ -1,37 +1,40 @@
 # Dr Apple Kano — Mobile App
 
-Expo SDK 57 + TypeScript + NativeWind port of the Dr Apple Phones Kano website
-([AbdulEedah/original-dr-apple](https://github.com/AbdulEedah/original-dr-apple)), using the same
-monochrome "Solène Fragrance" design, seed catalogue, swap pricing rules and WhatsApp checkout messages.
+Expo SDK 57 + TypeScript + NativeWind shopping app for Dr Apple Phones, Farm Centre Kano. It shares the website's
+catalogue, swap pricing rules and WhatsApp ordering
+([AbdulEedah/original-dr-apple](https://github.com/AbdulEedah/original-dr-apple)), redesigned as a native mobile app.
 
 ## Run it
 
 ```bash
 npm install
-npx expo start          # then press a (Android), i (iOS) or w (web), or scan the QR code with Expo Go
+npx expo start          # press a (Android) or i (iOS), or scan the QR code with Expo Go
 ```
 
-Other scripts: `npm run typecheck`, `npm run lint`, `npx expo-doctor`.
+Checks: `npm run typecheck`, `npm run lint`, `npx expo-doctor`.
 
 ### Optional: Supabase
 
-Copy `.env.example` to `.env` and fill in `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` to make the
-Admin CMS image uploader store files in the `dr-apple-assets` bucket. Without them the app runs in demo mode:
-all CMS edits persist on the device (AsyncStorage), just as the website persists them in localStorage.
+Fill in `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` in `.env` (see `.env.example`) so photo uploads
+in the staff dashboard go to the `dr-apple-assets` bucket. Without them the app runs in demo mode and keeps all edits
+on the device.
 
-## What's inside
+## App structure
 
-| Website (Next.js)                         | App (Expo Router)                     |
-| ----------------------------------------- | ------------------------------------- |
-| `/` storefront                            | `src/app/index.tsx`                   |
-| `/category/[slug]`                        | `src/app/category/[slug].tsx`         |
-| `/admin/login`, `/admin`, `/admin/*`      | `src/app/admin/*.tsx`                 |
-| `components/*` (Navbar, Hero, cards, modals, dock, footer) | `src/components/*`   |
-| `lib/store.ts` (CMSStore)                 | `src/lib/store.tsx` (React context + AsyncStorage) |
-| Swap valuation logic (in the modal)       | `src/lib/swap.ts`                     |
+| Screen | File |
+| --- | --- |
+| Home — banner, categories, featured, best value | `src/app/(tabs)/index.tsx` |
+| Shop — search, category filters, sort, grid | `src/app/(tabs)/shop.tsx` |
+| Swap — trade-in estimate and WhatsApp booking | `src/app/(tabs)/swap.tsx` |
+| Store — contact, directions, how swapping works | `src/app/(tabs)/store.tsx` |
+| Product page | `src/app/product/[id].tsx` |
+| Staff dashboard (sign in, products, storefront, swap content, media, team) | `src/app/admin/*` |
 
-Mobile adaptations: `<select>` elements open a bottom-sheet picker, modals are bottom sheets, the admin sidebar is a
-slide-out drawer, and wide admin tables scroll horizontally.
+Shared pieces: `src/components/ui` (design system: buttons, fields, lists, sheets, toasts), `src/lib/store.tsx`
+(catalogue + CMS state), `src/lib/swap.ts` (trade-in pricing), `src/lib/catalog.ts` (categories, stock, sorting).
 
-Demo admin logins: any email containing `admin@drapple` or `super` → Super Admin; `store` or `content` → Content Admin
-(or use the Quick Demo buttons on the login screen).
+Design tokens (colours, type scale) live in `tailwind.config.js` and `src/components/ui/theme.ts`.
+Shadows and press states: use `style={shadows.*}` and `active:` classes — NativeWind drops `Pressable` style
+functions when `className` is set, and remounts views whose `shadow-*` class toggles.
+
+Demo staff accounts: tap **Super Admin** or **Content Admin** on the sign-in screen (Store tab → Staff sign in).

@@ -14,9 +14,9 @@ import { FlatList, ScrollView, Share, Text, useWindowDimensions, View } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ConditionTag, StockIndicator } from '@/components/ProductBadge';
-import { Button, EmptyState, IconButton, Img } from '@/components/ui/primitives';
+import { Button, EmptyState, IconButton, ImageFallback, Img } from '@/components/ui/primitives';
 import { colors, shadows } from '@/components/ui/theme';
-import { categoryLabel, discountPercent } from '@/lib/catalog';
+import { discountPercent } from '@/lib/catalog';
 import { useCMS } from '@/lib/store';
 import { formatNaira, triggerDirectWhatsAppBuy, openWhatsApp } from '@/lib/utils';
 
@@ -50,10 +50,11 @@ export default function ProductScreen() {
   const savings = product.original_price ? product.original_price - product.price : 0;
 
   const specs = [
+    { label: 'Condition', value: product.badge_label },
     product.storage && { label: 'Storage', value: product.storage },
     product.color && { label: 'Colour', value: product.color },
-    { label: 'Condition', value: product.badge_label },
-    { label: 'Category', value: categoryLabel(product.category) },
+    { label: 'Availability', value: soldOut ? 'Sold out' : `${product.stock} in stock` },
+    { label: 'Pickup', value: 'Farm Centre, Kano' },
   ].filter(Boolean) as { label: string; value: string }[];
 
   const share = () =>
@@ -74,7 +75,10 @@ export default function ProductScreen() {
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
             renderItem={({ item }) => (
-              <Img source={{ uri: item }} style={{ width, height: width * 1.05 }} contentFit="cover" transition={200} />
+              <View style={{ width, height: width * 1.05 }}>
+                <ImageFallback size={48} />
+                <Img source={{ uri: item }} style={{ width, height: width * 1.05 }} contentFit="cover" transition={200} />
+              </View>
             )}
           />
           {gallery.length > 1 && (
@@ -117,21 +121,9 @@ export default function ProductScreen() {
           </View>
         </View>
 
-        {/* Specs */}
-        <View className="mt-6 flex-row flex-wrap gap-3 px-5">
-          {specs.map((s) => (
-            <View key={s.label} className="rounded-2xl bg-fill px-4 py-3" style={{ width: '48.3%' }}>
-              <Text className="text-caption text-secondary">{s.label}</Text>
-              <Text className="mt-0.5 text-body font-semibold text-ink" numberOfLines={1}>
-                {s.value}
-              </Text>
-            </View>
-          ))}
-        </View>
-
         {/* Battery */}
         {!!product.battery_health && product.category !== 'accessories' && (
-          <View className="mx-5 mt-3 rounded-2xl bg-fill px-4 py-3.5">
+          <View className="mx-5 mt-6 rounded-2xl bg-fill px-4 py-3.5">
             <View className="flex-row items-center justify-between">
               <Text className="text-caption text-secondary">Battery health</Text>
               <Text className="text-body font-semibold text-ink">{product.battery_health}%</Text>
@@ -141,6 +133,22 @@ export default function ProductScreen() {
             </View>
           </View>
         )}
+
+        {/* Details */}
+        <View className="mt-6 px-5">
+          <Text className="mb-1 text-headline font-semibold text-ink">Details</Text>
+          {specs.map((s, i) => (
+            <View
+              key={s.label}
+              className={`flex-row items-center justify-between py-3 ${i > 0 ? 'border-t border-separator' : ''}`}
+            >
+              <Text className="text-body text-secondary">{s.label}</Text>
+              <Text className="ml-4 flex-1 text-right text-body font-medium text-ink" numberOfLines={1}>
+                {s.value}
+              </Text>
+            </View>
+          ))}
+        </View>
 
         {/* Condition report */}
         {!!product.condition_description && (

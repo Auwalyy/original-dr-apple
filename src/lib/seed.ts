@@ -76,7 +76,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     color: 'Natural Titanium',
     battery_health: 96,
     condition_description: 'Pristine UK Used, 96% BH, Factory Unlocked, 0 Scratches.',
-    image_url: 'https://images.unsplash.com/photo-1695048065012-32a2f4c405fa?auto=format&fit=crop&q=80&w=1000',
+    image_url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=1000',
     description:
       'Grade A+ direct UK imported iPhone 15 Pro Max. Tested 50-point quality check by Dr Apple Kano engineers.',
     is_featured: true,
@@ -256,7 +256,7 @@ export const INITIAL_USERS: UserProfile[] = [
 
 export const INITIAL_MEDIA: string[] = [
   'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=1000',
-  'https://images.unsplash.com/photo-1695048065012-32a2f4c405fa?auto=format&fit=crop&q=80&w=1000',
+  'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=1000',
   'https://images.unsplash.com/photo-1663499482523-1c0c1bae4ce1?auto=format&fit=crop&q=80&w=1000',
   'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&q=80&w=1000',
   'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&q=80&w=1200',

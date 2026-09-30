@@ -112,25 +112,28 @@ export default function HomeScreen() {
 
       {/* Categories */}
       <SectionHeader title="Shop by category" className="mb-3 mt-8" />
-      <View className="flex-row flex-wrap gap-3 px-5">
-        {CATEGORIES.map(({ value, label, description, icon: Icon }) => (
-          <Pressable
-            key={value}
-            onPress={() => {
-              haptics.selection();
-              openShop({ category: value });
-            }}
-            className="rounded-2xl bg-fill p-4"
-            style={({ pressed }) => ({ width: '48.3%', opacity: pressed ? 0.7 : 1 })}
-          >
-            <View className="mb-6 h-10 w-10 items-center justify-center rounded-full bg-white">
-              <Icon size={20} color={colors.ink} />
-            </View>
-            <Text className="text-body font-semibold text-ink">{label}</Text>
-            <Text className="mt-0.5 text-caption text-secondary" numberOfLines={1}>
-              {description}
-            </Text>
-          </Pressable>
+      <View className="gap-3 px-5">
+        {[CATEGORIES.slice(0, 2), CATEGORIES.slice(2, 4)].map((row, r) => (
+          <View key={r} className="flex-row gap-3">
+            {row.map(({ value, label, description, icon: Icon }) => (
+              <Pressable
+                key={value}
+                onPress={() => {
+                  haptics.selection();
+                  openShop({ category: value });
+                }}
+                className="flex-1 rounded-2xl bg-fill p-4 active:opacity-70"
+              >
+                <View className="mb-6 h-10 w-10 items-center justify-center rounded-full bg-white">
+                  <Icon size={20} color={colors.ink} />
+                </View>
+                <Text className="text-body font-semibold text-ink">{label}</Text>
+                <Text className="mt-0.5 text-caption text-secondary" numberOfLines={1}>
+                  {description}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         ))}
       </View>
 

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { Img } from '@/components/ui/primitives';
+import { ImageFallback, Img } from '@/components/ui/primitives';
 import { discountPercent, productMeta } from '@/lib/catalog';
 import { haptics } from '@/lib/haptics';
 import { Product } from '@/lib/types';
@@ -28,10 +28,11 @@ export function ProductCard({ product, width }: ProductCardProps) {
       }}
       accessibilityRole="button"
       accessibilityLabel={`${product.name}, ${formatNaira(product.price)}`}
-      style={({ pressed }) => [{ width, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
-      className={width ? '' : 'flex-1'}
+      style={width ? { width } : undefined}
+      className={`active:opacity-80 ${width ? '' : 'flex-1'}`}
     >
       <View className="aspect-square overflow-hidden rounded-2xl bg-fill">
+        <ImageFallback />
         <Img source={{ uri: product.image_url }} className="h-full w-full" contentFit="cover" transition={200} />
 
         <View className="absolute left-2.5 top-2.5">

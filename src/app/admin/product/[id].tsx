@@ -60,6 +60,8 @@ function toForm(p?: Product): FormState {
 }
 
 const digits = (t: string) => t.replace(/[^0-9]/g, '');
+/** 2150000 → "2,150,000" for display while typing; the form keeps plain digits. */
+const grouped = (d: string) => d.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 export default function ProductEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -232,7 +234,7 @@ export default function ProductEditorScreen() {
                 label="Price (₦)"
                 placeholder="1,050,000"
                 keyboardType="number-pad"
-                value={form.price}
+                value={grouped(form.price)}
                 onChangeText={(t) => {
                   set('price', digits(t));
                   if (errors.price) setErrors((e) => ({ ...e, price: undefined }));
@@ -245,7 +247,7 @@ export default function ProductEditorScreen() {
                 label="Was (₦)"
                 placeholder="Optional"
                 keyboardType="number-pad"
-                value={form.originalPrice}
+                value={grouped(form.originalPrice)}
                 onChangeText={(t) => set('originalPrice', digits(t))}
               />
             </View>

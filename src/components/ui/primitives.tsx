@@ -1,6 +1,6 @@
 import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
-import { Apple, ChevronRight, LucideIcon, Search, X } from 'lucide-react-native';
+import { Apple, ChevronRight, LucideIcon, Search, Smartphone, X } from 'lucide-react-native';
 import { cssInterop } from 'nativewind';
 import React, { useState } from 'react';
 import {
@@ -24,6 +24,15 @@ cssInterop(ExpoLinearGradient, { className: 'style' });
 
 export const Img = ExpoImage;
 export const Gradient = ExpoLinearGradient;
+
+/** Icon drawn behind a product photo: visible while it loads, or if the URL is broken. */
+export function ImageFallback({ size = 32 }: { size?: number }) {
+  return (
+    <View className="absolute inset-0 items-center justify-center">
+      <Smartphone size={size} color={colors.tertiary} strokeWidth={1.5} />
+    </View>
+  );
+}
 
 /* ------------------------------------------------------------------------------------------------
  * Brand
@@ -104,8 +113,10 @@ export function Button({
         haptics.light();
         onPress?.(e);
       }}
-      className={`flex-row items-center justify-center gap-2 ${s.box} ${v.box} ${className}`}
-      style={({ pressed }) => ({ opacity: inactive ? 0.4 : pressed ? 0.8 : 1 })}
+      // Pressed feedback uses `active:` classes: Pressable style functions are dropped when className is set.
+      className={`flex-row items-center justify-center gap-2 active:opacity-80 ${s.box} ${v.box} ${
+        inactive ? 'opacity-40' : ''
+      } ${className}`}
       {...props}
     >
       {loading ? (
@@ -149,11 +160,8 @@ export function IconButton({
         haptics.selection();
         onPress?.(e);
       }}
-      className={`items-center justify-center rounded-full ${box} ${className}`}
-      style={({ pressed }) => [
-        { width: size, height: size, opacity: pressed ? 0.7 : 1 },
-        variant === 'glass' ? shadows.floating : null,
-      ]}
+      className={`items-center justify-center rounded-full active:opacity-70 ${box} ${className}`}
+      style={[{ width: size, height: size }, variant === 'glass' ? shadows.floating : null]}
       {...props}
     >
       <Icon size={iconSize} color={variant === 'dark' ? colors.white : colors.ink} strokeWidth={2} />
@@ -387,8 +395,7 @@ export function ListRow({
         haptics.selection();
         onPress?.();
       }}
-      className="min-h-[52px] flex-row items-center gap-3 px-4 py-3"
-      style={({ pressed }) => ({ backgroundColor: pressed ? colors.fill : colors.white })}
+      className="min-h-[52px] flex-row items-center gap-3 bg-white px-4 py-3 active:bg-fill"
     >
       {Icon && (
         <View className={`h-8 w-8 items-center justify-center rounded-lg ${destructive ? 'bg-red-50' : 'bg-ink'}`}>

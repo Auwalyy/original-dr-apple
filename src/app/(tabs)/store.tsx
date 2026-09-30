@@ -133,8 +133,7 @@ function QuickAction({ icon: Icon, label, onPress }: { icon: LucideIcon; label: 
         onPress();
       }}
       accessibilityRole="button"
-      className="flex-1 items-center gap-1.5 rounded-2xl bg-fill py-3"
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      className="flex-1 items-center gap-1.5 rounded-2xl bg-fill py-3 active:opacity-70"
     >
       <Icon size={20} color={colors.ink} />
       <Text className="text-caption font-semibold text-ink">{label}</Text>

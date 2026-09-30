@@ -87,8 +87,9 @@ export function OptionSheet<T extends string>({
                 onChange(opt.value);
                 onClose();
               }}
-              className="min-h-[52px] flex-row items-center gap-3 rounded-xl px-3 py-2.5"
-              style={({ pressed }) => ({ backgroundColor: active || pressed ? colors.fill : 'transparent' })}
+              className={`min-h-[52px] flex-row items-center gap-3 rounded-xl px-3 py-2.5 active:bg-fill ${
+                active ? 'bg-fill' : ''
+              }`}
             >
               {!!opt.image && (
                 <Img source={{ uri: opt.image }} className="h-11 w-11 rounded-lg bg-fill" contentFit="cover" />

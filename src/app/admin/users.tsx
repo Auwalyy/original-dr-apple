@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { AdminScreen } from '@/components/admin/AdminScreen';
 import { useFeedback } from '@/components/ui/Feedback';
 import { EmptyState, Img } from '@/components/ui/primitives';
-import { colors, shadows } from '@/components/ui/theme';
+import { shadows } from '@/components/ui/theme';
 import { useCMS } from '@/lib/store';
 import { Role, UserProfile } from '@/lib/types';
 
@@ -50,8 +50,9 @@ export default function AdminUsersScreen() {
             <Pressable
               key={user.id}
               onPress={() => changeRole(user)}
-              className={`flex-row items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-separator' : ''}`}
-              style={({ pressed }) => ({ backgroundColor: pressed ? colors.fill : colors.white })}
+              className={`flex-row items-center gap-3 bg-white px-4 py-3 active:bg-fill ${
+                i > 0 ? 'border-t border-separator' : ''
+              }`}
             >
               <Img source={{ uri: user.avatar_url }} className="h-11 w-11 rounded-full bg-fill" contentFit="cover" />
               <View className="flex-1">
