@@ -32,7 +32,7 @@ export default function AdminMediaScreen() {
       );
       toast('Photo added');
     } catch (err) {
-      console.error(err);
+      if (__DEV__) console.error(err);
       toast('Upload failed', 'error');
     } finally {
       setUploading(false);

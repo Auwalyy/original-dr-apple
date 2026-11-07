@@ -63,7 +63,9 @@ export function buildWhatsAppUrl(phone: string, text: string): string {
 }
 
 export function openWhatsApp(phone: string, text: string): void {
-  Linking.openURL(buildWhatsAppUrl(phone || DEFAULT_WHATSAPP, text)).catch((e) => console.error(e));
+  Linking.openURL(buildWhatsAppUrl(phone || DEFAULT_WHATSAPP, text)).catch((e) => {
+    if (__DEV__) console.error(e);
+  });
 }
 
 /**

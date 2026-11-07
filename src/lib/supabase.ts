@@ -25,7 +25,7 @@ export async function uploadImageToStorage(localUri: string, mimeType = 'image/j
 
   const { error } = await supabase.storage
     .from(MEDIA_BUCKET)
-    .upload(filePath, body, { contentType: mimeType, cacheControl: '3600', upsert: true });
+    .upload(filePath, body, { contentType: mimeType, cacheControl: '3600', upsert: false });
   if (error) throw error;
 
   return supabase.storage.from(MEDIA_BUCKET).getPublicUrl(filePath).data.publicUrl;

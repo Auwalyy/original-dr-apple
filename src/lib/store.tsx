@@ -37,19 +37,32 @@ interface CMSContextValue {
 
 const CMSContext = createContext<CMSContextValue | null>(null);
 
+/** Reads a saved value, falling back when it is missing, unparsable or the wrong shape (e.g. after an app update). */
 async function load<T>(key: string, fallback: T): Promise<T> {
   try {
     const saved = await AsyncStorage.getItem(key);
-    return saved ? (JSON.parse(saved) as T) : fallback;
+    if (!saved) return fallback;
+    const parsed: unknown = JSON.parse(saved);
+    if (fallback !== null) {
+      const sameShape = Array.isArray(fallback)
+        ? Array.isArray(parsed)
+        : typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+      if (!sameShape) return fallback;
+      // Objects: fill in fields added since the value was saved.
+      if (!Array.isArray(fallback)) return { ...fallback, ...(parsed as object) } as T;
+    }
+    return parsed as T;
   } catch (e) {
-    console.error(e);
+    if (__DEV__) console.error(e);
     return fallback;
   }
 }
 
 function persist(key: string, value: unknown) {
   const write = value === null ? AsyncStorage.removeItem(key) : AsyncStorage.setItem(key, JSON.stringify(value));
-  write.catch((e) => console.error(e));
+  write.catch((e) => {
+    if (__DEV__) console.error(e);
+  });
 }
 
 export function CMSProvider({ children }: { children: React.ReactNode }) {
@@ -81,10 +94,13 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const commitProducts = (next: Product[]) => {
-    setProducts(next);
-    persist(STORAGE_KEYS.PRODUCTS, next);
-  };
+  // Functional updates so two quick edits in a row never overwrite each other.
+  const commitProducts = (update: (prev: Product[]) => Product[]) =>
+    setProducts((prev) => {
+      const next = update(prev);
+      persist(STORAGE_KEYS.PRODUCTS, next);
+      return next;
+    });
 
   const value: CMSContextValue = {
     ready,
@@ -95,13 +111,15 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     media,
     session,
     addProduct: (data) => {
-      const product: Product = { ...data, id: 'prod-' + Date.now(), created_at: new Date().toISOString() };
-      commitProducts([product, ...products]);
+      const product: Product = { ...data, id: `prod-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, created_at: new Date().toISOString() };
+      commitProducts((prev) => [product, ...prev]);
     },
     updateProduct: (id, data) => {
-      commitProducts(products.map((p) => (p.id === id ? { ...p, ...data, updated_at: new Date().toISOString() } : p)));
+      commitProducts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...data, updated_at: new Date().toISOString() } : p)),
+      );
     },
-    deleteProduct: (id) => commitProducts(products.filter((p) => p.id !== id)),
+    deleteProduct: (id) => commitProducts((prev) => prev.filter((p) => p.id !== id)),
     saveSiteSettings: (next) => {
       setSettings(next);
       persist(STORAGE_KEYS.SETTINGS, next);
@@ -111,15 +129,20 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
       persist(STORAGE_KEYS.SWAP, next);
     },
     updateUserRole: (userId, role) => {
-      const next = users.map((u) => (u.id === userId ? { ...u, role } : u));
-      setUsers(next);
-      persist(STORAGE_KEYS.USERS, next);
+      setUsers((prev) => {
+        const next = prev.map((u) => (u.id === userId ? { ...u, role } : u));
+        persist(STORAGE_KEYS.USERS, next);
+        return next;
+      });
     },
     addMedia: (url) => {
-      if (!url || media.includes(url)) return;
-      const next = [url, ...media];
-      setMedia(next);
-      persist(STORAGE_KEYS.MEDIA, next);
+      if (!url) return;
+      setMedia((prev) => {
+        if (prev.includes(url)) return prev;
+        const next = [url, ...prev];
+        persist(STORAGE_KEYS.MEDIA, next);
+        return next;
+      });
     },
     login: (next) => {
       setSession(next);

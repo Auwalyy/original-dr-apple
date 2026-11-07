@@ -36,7 +36,7 @@ export function ImageUploader({ value, onChange, aspect = 4 / 3 }: ImageUploader
       onChange(await uploadImageToStorage(asset.uri, asset.mimeType ?? 'image/jpeg'));
       toast('Photo uploaded');
     } catch (err) {
-      console.error(err);
+      if (__DEV__) console.error(err);
       onChange(asset.uri);
       toast('Upload failed — saved on this device only', 'error');
     } finally {

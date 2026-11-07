@@ -22,12 +22,13 @@ import { formatNaira, triggerDirectWhatsAppBuy, openWhatsApp } from '@/lib/utils
 
 export default function ProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { products, settings } = useCMS();
+  const { products, settings, session } = useCMS();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
 
-  const product = products.find((p) => p.id === id);
+  // Hidden products stay reachable for signed-in staff (to preview), never for customers following an old link.
+  const product = products.find((p) => p.id === id && (p.is_published || !!session));
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   if (!product) {
